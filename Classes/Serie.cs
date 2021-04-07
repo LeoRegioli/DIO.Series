@@ -10,8 +10,9 @@ namespace DIOSeries.Classes
         public int Ano { get; set; }
         public bool Excluido { get; private set; }
 
-        public Serie(Genero genero, string titulo, string descricao, int ano)
+        public Serie(int id, Genero genero, string titulo, string descricao, int ano)
         {
+            Id = id;
             Genero = genero;
             Titulo = titulo;
             Descricao = descricao;
@@ -21,6 +22,6 @@ namespace DIOSeries.Classes
 
         public void Excluir() => this.Excluido = true;
 
-        public override string ToString() => $"#{Id} | Titulo: {Titulo} | Ano {Ano} | Genero {Genero} | Descrição {Descricao}";
+        public override string ToString() => $"#{Id} | Titulo: {Titulo} | Ano: {Ano} | Genero: {Genero} | Descrição: {Descricao}";
     }
 }

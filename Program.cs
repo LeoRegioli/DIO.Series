@@ -8,6 +8,7 @@ namespace DIOSeries
     class Program
     {
         static Repositorio repo = new Repositorio();
+        static bool listarSeries = false;
         static Dictionary<string, string> dic = new Dictionary<string, string>
         {
             {"1", "Listar Séries"},
@@ -19,15 +20,15 @@ namespace DIOSeries
             {"X", "Sair"}
         };
 
-        static Dictionary<string, Delegate> opt = new Dictionary<string, Delegate>
+        static Dictionary<string, Action> opt = new Dictionary<string, Action>
         {
-            {"1", new Func<string, bool>(ListarSerie)}, //continuar
-            {"2", new Action(InserirSerie)},
-            {"3", new Action(AtualizarSerie)},
-            {"4", new Action(ExcluirSerie)},
-            {"5", new Action(VisualizarSerie)},
-            {"C", new Action(Limpar)},
-            {"X", new Action(Sair)}
+            {"1", ListarSerie},
+            {"2", InserirSerie},
+            {"3", AtualizarSerie},
+            {"4", ExcluirSerie},
+            {"5", VisualizarSerie},
+            {"C", Limpar},
+            {"X", Sair}
         };
 
         static string Menu()
@@ -44,16 +45,42 @@ namespace DIOSeries
 
         static void InserirSerie()
         {
-            //TODO
+            Limpar();
+            Console.Write("Título: ");
+            var titulo = Console.ReadLine();
+
+            Console.Write("Ano: ");
+            var ano = int.Parse(Console.ReadLine());
+
+            Console.WriteLine("Gênero");
+            foreach (int i in Enum.GetValues(typeof(Genero)))
+            {
+                Console.WriteLine($"{i} - {Enum.GetName(typeof(Genero), i)}");
+            }
+            Console.Write("> ");
+            var genero = int.Parse(Console.ReadLine());
+
+            Console.Write("Descrição: ");
+            var descricao = Console.ReadLine();
+
+            var id = repo.ProxId();
+            var novaSerie = new Serie(id, (Genero)genero, titulo, descricao, ano);
+
+            repo.Inserir(novaSerie);
+            Console.WriteLine("Série cadastrada com sucesso.");
+            Thread.Sleep(2000);
+            Limpar();
         }
 
         static void AtualizarSerie()
         {
             Limpar();
-            if (!ListarSerie())
+            if (!listarSeries)
                 return;
 
+            ListarSerie();
             Console.WriteLine("Qual série que deseja atualizar?");
+            Console.Write("> ");
             var id = Convert.ToInt32(Console.ReadLine());
             var serie = repo.RetornaPorId(id);
 
@@ -62,45 +89,47 @@ namespace DIOSeries
             Console.Write($"Título Novo: ");
             var titulo = Console.ReadLine();
 
-            Console.WriteLine($"Genero antigo: {serie.Genero}");
-            foreach (var item in Enum.GetValues(typeof(Genero)))
+            Console.WriteLine($"\nGenero antigo: {serie.Genero}");
+            foreach (int i in Enum.GetValues(typeof(Genero)))
             {
-                System.Console.WriteLine($"{item} - {Enum.GetName(typeof(Genero), item)}");
+                System.Console.WriteLine($"{i} - {Enum.GetName(typeof(Genero), i)}");
             }
 
             Console.Write("ID do genero novo: ");
             var genero = Convert.ToInt32(Console.ReadLine());
 
-            Console.WriteLine($"Ano antigo: {serie.Ano}");
+            Console.WriteLine($"\nAno antigo: {serie.Ano}");
             Console.Write($"Ano novo: ");
             var ano = Convert.ToInt32(Console.ReadLine());
 
-            Console.WriteLine($"Descrição antiga: {serie.Descricao}");
+            Console.WriteLine($"\nDescrição antiga: {serie.Descricao}");
             Console.Write("Descrição nova: ");
             var descricao = Console.ReadLine();
 
-            var serieAtualiza = new Serie((Genero)genero, titulo, descricao, ano);
+            var serieAtualiza = new Serie(id, (Genero)genero, titulo, descricao, ano);
 
             repo.Atualizar(id, serieAtualiza);
 
             Console.WriteLine("Série atualizada com sucesso!");
-            Console.ReadKey();
+            Thread.Sleep(2000);
         }
 
         static void VisualizarSerie()
         {
             Limpar();
-            if (!ListarSerie())
+            if (!listarSeries)
                 return;
 
+            ListarSerie();
             Console.WriteLine("Qual série deseja visualizar?");
             Console.Write("> ");
             var id = Convert.ToInt32(Console.ReadLine());
             var serie = repo.RetornaPorId(id);
+            Limpar();
             Console.WriteLine(serie);
         }
 
-        static bool ListarSerie()
+        static void ListarSerie()
         {
             Limpar();
 
@@ -108,7 +137,8 @@ namespace DIOSeries
             if (a.Count <= 0)
             {
                 Console.WriteLine($"Não há series para serem listadas!{Environment.NewLine}");
-                return false;
+                listarSeries = false;
+                return;
             }
 
             int aux = 0;
@@ -122,15 +152,19 @@ namespace DIOSeries
             }
 
             if (aux <= 0)
-                return false;
+            {
+                Console.WriteLine($"Não há series para serem listadas!{Environment.NewLine}");
+                listarSeries = false;
+                return;
+            }
 
-            return true;
+            listarSeries = true;
         }
         static void ExcluirSerie()
         {
             Limpar();
 
-            if (!ListarSerie())
+            if (!listarSeries)
                 return;
 
             ListarSerie();
@@ -144,11 +178,13 @@ namespace DIOSeries
         static void Sair() => Environment.Exit(-1);
         static void Main(string[] args)
         {
+            Serie s = new Serie(0, Genero.Acao, "Teste", "teste123", 2000);
+            repo.Inserir(s);
             Limpar();
             var optionUser = Menu();
             while (optionUser.ToUpper() != "X")
             {
-                opt[optionUser].DynamicInvoke();
+                opt[optionUser].Invoke();
                 optionUser = Menu();
             }
         }
